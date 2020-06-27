@@ -1,9 +1,11 @@
 package ch.aaap.assignment;
 
+import org.junit.jupiter.api.Test;
+
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import org.junit.jupiter.api.Test;
 
 public class ApplicationTest {
 
@@ -55,7 +57,7 @@ public class ApplicationTest {
   }
 
   @Test
-  public void returnsAmountOfPoliticalCommunitiesInDistict() {
+  public void returnsAmountOfPoliticalCommunitiesInDistrict() {
     assertEquals(
         14,
         sut.getAmountOfPoliticalCommunitiesInDistrict("101"),
@@ -101,5 +103,44 @@ public class ApplicationTest {
         3,
         sut.getAmountOfPoliticalCommunityWithoutPostalCommunities(),
         "Correct amount of political communities without postal communities");
+  }
+
+  @Test
+  public void returnCountOfDistrictsByCanton() {
+    Map<String, Long> countOfDistrictsByCanton = sut.getCountOfDistrictsByCantonSorted();
+    assertEquals(
+        26, countOfDistrictsByCanton.size(), "Correct count of districts grouped by canton");
+    Map.Entry<String, Long> cantonWithHighestAmountOfDistricts =
+        countOfDistrictsByCanton.entrySet().iterator().next();
+    assertEquals(
+        "VS",
+        cantonWithHighestAmountOfDistricts.getKey(),
+        "Correct canton with highest amount of districts");
+    assertEquals(
+        13,
+        (long) cantonWithHighestAmountOfDistricts.getValue(),
+        "Correct count of highest amount of districts per canton");
+  }
+
+  @Test
+  public void returnCountOfPoliticalCommunitiesByCanton() {
+    Map<String, Long> politicalCommunitiesCountByCanton =
+        sut.countPoliticalCommunitiesByCantonSorted();
+    assertEquals(
+        26,
+        politicalCommunitiesCountByCanton.size(),
+        "Correct count of political communities grouped by canton");
+
+    Map.Entry<String, Long> cantonWithHighestAmountOfDistricts =
+        politicalCommunitiesCountByCanton.entrySet().iterator().next();
+
+    assertEquals(
+        "BE",
+        cantonWithHighestAmountOfDistricts.getKey(),
+        "Correct canton with highest amount of political communities");
+    assertEquals(
+        346,
+        (long) cantonWithHighestAmountOfDistricts.getValue(),
+        "Correct count of highest amount of political communities per canton");
   }
 }

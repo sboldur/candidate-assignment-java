@@ -9,8 +9,16 @@ import ch.aaap.assignment.raw.CSVUtil;
 import lombok.Getter;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
 
 public class Application {
   @Getter private Model model;
@@ -117,6 +125,54 @@ public class Application {
         .count();
   }
 
+  /** @return cantons with amount of districts sorted by amount of districts DESC */
+  public Map<String, Long> getCountOfDistrictsByCantonSorted() {
+    return model.getPoliticalCommunities().stream()
+        .map(pc -> Map.entry(pc.getDistrict(), pc.getCanton()))
+        .filter(distinctByKey(Map.Entry::getKey))
+        .collect(groupingBy(entry -> entry.getValue().getCode(), Collectors.counting()))
+        .entrySet()
+        .stream()
+        .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+        .collect(
+            toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (u, v) -> {
+                  throw new IllegalStateException(String.format("Duplicate key %s", u));
+                },
+                LinkedHashMap::new));
+  }
+
+  /**
+   * @return cantons with amount of political communities sorted by amount of political communities
+   *     DESC
+   */
+  public Map<String, Long> countPoliticalCommunitiesByCantonSorted() {
+    return model.getPoliticalCommunities().stream()
+        .collect(groupingBy(pc -> pc.getCanton().getCode(), Collectors.counting()))
+        .entrySet()
+        .stream()
+        .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+        .collect(
+            toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (u, v) -> {
+                  throw new IllegalStateException(String.format("Duplicate key %s", u));
+                },
+                LinkedHashMap::new));
+  }
+
+  private static <T> Predicate<T> distinctByKey(Function<? super T, ?> keyExtractor) {
+    final Set<Object> seen = new HashSet<>();
+    return (T t) -> seen.add(keyExtractor.apply(t));
+  }
+
+  /**
+   * @param cantonCode verifies whether specified canton code exists and throws
+   *     IllegalArgumentException otherwise
+   */
   private void validateCantonCode(String cantonCode) {
     boolean validCantonCode =
         model.getCantonCodes().stream().anyMatch(canton -> canton.equals(cantonCode));
@@ -125,6 +181,10 @@ public class Application {
     }
   }
 
+  /**
+   * @param districtNumber verifies whether specified district number exists and throws
+   *     IllegalArgumentException otherwise
+   */
   private void validateDistrictNumber(String districtNumber) {
     boolean validDistrictNumber =
         model.getDistrictNumbers().stream().anyMatch(district -> district.equals(districtNumber));
