@@ -1,16 +1,35 @@
 package ch.aaap.assignment.model;
 
+import ch.aaap.assignment.raw.CSVPoliticalCommunity;
+import lombok.Data;
+
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
-public interface PoliticalCommunity {
+@Data
+public class PoliticalCommunity {
 
-  public String getNumber();
+  private String number;
+  private String name;
+  private String shortName;
+  private LocalDate lastUpdate;
 
-  public String getName();
+  private Canton canton;
+  private District district;
 
-  public String getShortName();
+  private Set<PostalCommunity> postalCommunities;
 
-  public LocalDate getLastUpdate();
-
-  // TODO add more features here representing the relations
+  public PoliticalCommunity(CSVPoliticalCommunity csvPoliticalCommunity) {
+    this.number = csvPoliticalCommunity.getNumber();
+    this.name = csvPoliticalCommunity.getName();
+    this.shortName = csvPoliticalCommunity.getShortName();
+    this.lastUpdate = csvPoliticalCommunity.getLastUpdate();
+    this.canton =
+        new Canton(csvPoliticalCommunity.getCantonCode(), csvPoliticalCommunity.getCantonName());
+    this.district =
+        new District(
+            csvPoliticalCommunity.getDistrictNumber(), csvPoliticalCommunity.getDistrictName());
+    this.postalCommunities = new HashSet<>();
+  }
 }

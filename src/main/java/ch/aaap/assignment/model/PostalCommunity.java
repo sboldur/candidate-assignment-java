@@ -1,12 +1,18 @@
 package ch.aaap.assignment.model;
 
-public interface PostalCommunity {
+import ch.aaap.assignment.raw.CSVPostalCommunity;
+import lombok.Data;
 
-  public String getZipCode();
+@Data
+public class PostalCommunity {
 
-  public String getZipCodeAddition();
+  private String zipCode;
+  private String zipCodeAddition;
+  private String name;
 
-  public String getName();
-
-  // TODO add more features here representing the relations
+  public PostalCommunity(CSVPostalCommunity csvPostalCommunity) {
+    this.zipCode = csvPostalCommunity.getZipCode();
+    this.zipCodeAddition = csvPostalCommunity.getZipCodeAddition();
+    this.name = csvPostalCommunity.getName();
+  }
 }
