@@ -1,16 +1,21 @@
 package ch.aaap.assignment;
 
+import ch.aaap.assignment.converter.CsvToModelConverter;
 import ch.aaap.assignment.model.Model;
+import ch.aaap.assignment.model.PoliticalCommunity;
 import ch.aaap.assignment.raw.CSVPoliticalCommunity;
 import ch.aaap.assignment.raw.CSVPostalCommunity;
 import ch.aaap.assignment.raw.CSVUtil;
+import lombok.Getter;
+
 import java.time.LocalDate;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Application {
+  @Getter private Model model;
 
-  private Model model = null;
-
+  /** Read the CSVs and initializes a in memory model */
   public Application() {
     initModel();
   }
@@ -23,13 +28,7 @@ public class Application {
   private void initModel() {
     Set<CSVPoliticalCommunity> politicalCommunities = CSVUtil.getPoliticalCommunities();
     Set<CSVPostalCommunity> postalCommunities = CSVUtil.getPostalCommunities();
-
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
-  }
-  /** @return model */
-  public Model getModel() {
-    return model;
+    model = CsvToModelConverter.getModelFromCsvData(politicalCommunities, postalCommunities);
   }
 
   /**
@@ -37,8 +36,10 @@ public class Application {
    * @return amount of political communities in given canton
    */
   public long getAmountOfPoliticalCommunitiesInCanton(String cantonCode) {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    validateCantonCode(cantonCode);
+    return model.getPoliticalCommunities().stream()
+        .filter(pc -> pc.getCanton().getCode().equals(cantonCode))
+        .count();
   }
 
   /**
@@ -46,26 +47,37 @@ public class Application {
    * @return amount of districts in given canton
    */
   public long getAmountOfDistrictsInCanton(String cantonCode) {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    validateCantonCode(cantonCode);
+    return model.getPoliticalCommunities().stream()
+        .filter(pc -> pc.getCanton().getCode().equals(cantonCode))
+        .map(pc -> pc.getDistrict().getNumber())
+        .distinct()
+        .count();
   }
 
   /**
    * @param districtNumber of a district (e.g. 101)
-   * @return amount of districts in given canton
+   * @return amount of districts in given district
    */
-  public long getAmountOfPoliticalCommunitiesInDistict(String districtNumber) {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+  public long getAmountOfPoliticalCommunitiesInDistrict(String districtNumber) {
+    validateDistrictNumber(districtNumber);
+    return model.getPoliticalCommunities().stream()
+        .filter(pc -> pc.getDistrict().getNumber().equals(districtNumber))
+        .count();
   }
 
   /**
    * @param zipCode 4 digit zip code
-   * @return district that belongs to specified zip code
+   * @return districts that belongs to specified zip code
    */
   public Set<String> getDistrictsForZipCode(String zipCode) {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    return model.getPoliticalCommunities().stream()
+        .filter(
+            pc ->
+                pc.getPostalCommunities().stream()
+                    .anyMatch(postalCommunity -> postalCommunity.getZipCode().equals(zipCode)))
+        .map(pc -> pc.getDistrict().getName())
+        .collect(Collectors.toSet());
   }
 
   /**
@@ -74,17 +86,23 @@ public class Application {
    */
   public LocalDate getLastUpdateOfPoliticalCommunityByPostalCommunityName(
       String postalCommunityName) {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    return model.getPoliticalCommunities().stream()
+        .filter(
+            pc ->
+                pc.getPostalCommunities().stream()
+                    .anyMatch(
+                        postalCommunity -> postalCommunity.getName().equals(postalCommunityName)))
+        .map(PoliticalCommunity::getLastUpdate)
+        .min(LocalDate::compareTo)
+        .orElseThrow(IllegalArgumentException::new);
   }
 
   /**
    * https://de.wikipedia.org/wiki/Kanton_(Schweiz)
    *
-   * @return amount of canton
+   * @return amount of cantons
    */
   public long getAmountOfCantons() {
-    // TODO implementation
     return model.getCantons().size();
   }
 
@@ -94,7 +112,24 @@ public class Application {
    * @return amount of political communities without postal communities
    */
   public long getAmountOfPoliticalCommunityWithoutPostalCommunities() {
-    // TODO implementation
-    throw new RuntimeException("Not yet implemented");
+    return model.getPoliticalCommunities().stream()
+        .filter(pc -> pc.getPostalCommunities().isEmpty())
+        .count();
+  }
+
+  private void validateCantonCode(String cantonCode) {
+    boolean validCantonCode =
+        model.getCantonCodes().stream().anyMatch(canton -> canton.equals(cantonCode));
+    if (!validCantonCode) {
+      throw new IllegalArgumentException("Invalid canton code: " + cantonCode);
+    }
+  }
+
+  private void validateDistrictNumber(String districtNumber) {
+    boolean validDistrictNumber =
+        model.getDistrictNumbers().stream().anyMatch(district -> district.equals(districtNumber));
+    if (!validDistrictNumber) {
+      throw new IllegalArgumentException("Invalid district number: " + districtNumber);
+    }
   }
 }
