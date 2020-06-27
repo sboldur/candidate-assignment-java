@@ -24,4 +24,8 @@ public class CSVPostalCommunity {
 
   // GDENAMK
   private String politicalCommunityShortName;
+
+  public String getZipCodeKey() {
+    return zipCode + zipCodeAddition;
+  }
 }
